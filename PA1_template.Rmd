@@ -3,23 +3,232 @@ title: "Reproducible Research: Peer Assessment 1"
 output: 
   html_document:
     keep_md: true
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
 ---
 
+
+## Load packages
+
+```{r load-packages, message = FALSE, echo = TRUE}
+library(ggplot2)
+library(dplyr)
+```
 
 ## Loading and preprocessing the data
 
 
+```{r load-data, echo = TRUE}
+activity <- read.csv("activity.csv", stringsAsFactors=FALSE)
+str(activity)
+```
 
-## What is mean total number of steps taken per day?
+### Summarizing steps per day 
+
+```{r summarice by steps per day ignore na, echo = TRUE}
+activity_steps_day <- na.omit(activity) %>% 
+  group_by(date) %>%
+  summarise(steps_day=sum(steps))
 
 
 
-## What is the average daily activity pattern?
+```
+
+### Summarizing steps on average through the 24 hours
+
+```{r summarice by steps per hour ignore na, echo = TRUE}
+activity_steps_hour <- na.omit(activity) %>% 
+  group_by(interval) %>%
+  summarise(steps_interval=mean(steps))
+
+activity_steps_hour <- activity_steps_hour %>% mutate(hour = trunc(interval/100))
+
+```
+
+* * *
+
+## What is the mean total number of steps taken per day?
+
+For this part of the assignment the missing values in the dataset are ignore.
 
 
+### Histogram of the total number of steps taken each day
+
+
+```{r  echo = TRUE}
+ggplot(data=activity_steps_day, aes(x=date, y=steps_day)) + 
+  geom_bar(stat="identity") + 
+  labs(title="Histogram steps per day") +
+  labs(x="Days", y="Steps") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+### Mean and median of total number of steps taken per day
+
+
+```{r mean and median, echo = TRUE}
+activity_steps_day %>% 
+  summarise(steps_median=median(steps_day))
+
+activity_steps_day %>% 
+  summarise(steps_mean=mean(steps_day))
+
+```
+
+
+
+## Average daily activity pattern
+
+
+### Time series plot 5 minute interval
+
+
+```{r echo = TRUE}
+ggplot(data=activity_steps_hour, aes(x=interval, y=steps_interval)) + 
+  geom_bar(stat="identity") + 
+  labs(title="Histogram steps taken on average per interval") +
+  labs(x="5 min Interval", y="Steps") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+**From the histogram we can observe that the most active hour is 8AM.
+
+
+```{r echo = TRUE}
+ggplot(data=activity_steps_hour, aes(x=interval, y=steps_interval)) + geom_line() +
+  labs(title="Time series steps taken on average per interval") +
+  labs(x="5 min Interval", y="Steps") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+### 5-minute interval which contains on average maximum number of steps across all the days in the dataset
+
+
+
+```{r max number of steps on average, echo = TRUE}
+activity_steps_hour %>% 
+  summarise(steps_max=max(steps_interval))
+
+```
+
+The 5-minute interval with more steps on average is at 8:35am.  I could find the max average but I was not able to display in the same result which time specific interval was it.  I look for it manually in the data.
+
+* * *
 
 ## Imputing missing values
 
+### Total number of missing values in the dataset
 
 
-## Are there differences in activity patterns between weekdays and weekends?
+```{r echo = TRUE}
+sum(is.na(activity$steps))
+
+```
+
+Total number of rows with missing values in the data set is 2304.
+
+
+### strategy for filling missing values is assiging the 5-minute interval mean:
+
+```{r echo = TRUE}
+activity_steps_hour %>% 
+  summarise(steps_mean=mean(steps_interval))
+
+```
+
+
+
+```{r echo = TRUE}
+activity2 <- activity
+activity2$steps[is.na(activity2$steps)] <- 37
+
+sum(is.na(activity2$steps))
+```
+ 
+
+### Histogram of the total number of steps taken each day (Missing values filled)
+
+
+```{r  echo = TRUE}
+
+activity_steps_day <- activity2 %>% 
+  group_by(date) %>%
+  summarise(steps_day=sum(steps))
+
+```
+
+
+```{r  echo = TRUE}
+
+ggplot(data=activity_steps_day, aes(x=date, y=steps_day)) + 
+  geom_bar(stat="identity") + 
+  labs(title="Histogram steps per day") +
+  labs(x="Days", y="Steps") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+
+### Mean and median of total number of steps taken per day (Missing values filled)
+
+
+```{r echo = TRUE}
+activity_steps_day %>% 
+  summarise(steps_median=median(steps_day))
+
+activity_steps_day %>% 
+  summarise(steps_mean=mean(steps_day))
+
+```
+
+
+**Mean and median of total number of steps taken per day does not differ between dataset with missing values and data set with missing values filled**
+
+
+
+* * *
+
+## Pattern differences in activity between weekdays and weekends
+
+
+### define day of the week in the dataset and recreate the average 5-minute interval dataset
+
+
+```{r echo=TRUE}
+
+activity2$day <- weekdays(as.Date(activity$date))
+
+activity2$wday <- "weekday"
+activity2$wday[activity2$day=="Saturday"] <- "weekend"
+activity2$wday[activity2$day=="Sunday"] <- "weekend"
+
+
+activity_steps_hour <- activity2 %>% 
+  group_by(interval, wday) %>%
+  summarise(steps_interval=mean(steps))
+
+```
+
+
+### panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). 
+
+
+```{r echo=TRUE}
+
+ggplot(data=activity_steps_hour, aes(x=interval, y=steps_interval)) + geom_line() +
+  labs(title="Time series steps taken on average per interval") +
+  labs(x="5 min Interval", y="Steps") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  facet_wrap(~ wday)
+
+```
+
+
+
