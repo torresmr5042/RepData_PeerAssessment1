@@ -43,6 +43,36 @@ str(activity)
 activity_steps_day <- na.omit(activity) %>% 
   group_by(date) %>%
   summarise(steps_day=sum(steps))
+
+head(activity_steps_day)
+```
+
+```
+## # A tibble: 6 × 2
+##         date steps_day
+##        <chr>     <int>
+## 1 2012-10-02       126
+## 2 2012-10-03     11352
+## 3 2012-10-04     12116
+## 4 2012-10-05     13294
+## 5 2012-10-06     15420
+## 6 2012-10-07     11015
+```
+
+```r
+tail(activity_steps_day)
+```
+
+```
+## # A tibble: 6 × 2
+##         date steps_day
+##        <chr>     <int>
+## 1 2012-11-24     14478
+## 2 2012-11-25     11834
+## 3 2012-11-26     11162
+## 4 2012-11-27     13646
+## 5 2012-11-28     10183
+## 6 2012-11-29      7047
 ```
 
 ### Summarizing steps on average through the 24 hours
@@ -68,11 +98,16 @@ For this part of the assignment the missing values in the dataset are ignore.
 
 
 ```r
-ggplot(data=activity_steps_day, aes(x=date, y=steps_day)) + 
-  geom_bar(stat="identity") + 
+ggplot(data=activity_steps_day, aes(activity_steps_day$steps_day)) + 
+  geom_histogram(col="red", 
+                 aes(fill=..count..)) +
+  scale_fill_gradient("Count", low = "red", high = "green") +
   labs(title="Histogram steps per day") +
-  labs(x="Days", y="Steps") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  labs(x="Steps", y="Count Days") 
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-1-1.png)<!-- -->
@@ -157,7 +192,7 @@ activity_steps_hour %>%
 ## 1  206.1698
 ```
 
-The 5-minute interval with more steps on average is at 8:35am.  I could find the max average but I was not able to display in the same result which time specific interval was it.  I look for it manually in the data.
+###The 5-minute interval with more steps on average is at 8:35am.  I could find the max average but I was not able to display in the same result which time specific interval was it.  I look for it manually in the data.
 
 * * *
 
@@ -221,11 +256,16 @@ activity_steps_day <- activity2 %>%
 
 
 ```r
-ggplot(data=activity_steps_day, aes(x=date, y=steps_day)) + 
-  geom_bar(stat="identity") + 
+ggplot(data=activity_steps_day, aes(activity_steps_day$steps_day)) + 
+  geom_histogram(col="red", 
+                 aes(fill=..count..)) +
+  scale_fill_gradient("Count", low = "red", high = "green") +
   labs(title="Histogram steps per day") +
-  labs(x="Days", y="Steps") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  labs(x="Steps", y="Count Days") 
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
@@ -260,7 +300,7 @@ activity_steps_day %>%
 ```
 
 
-**Mean and median of total number of steps taken per day does not differ between dataset with missing values and data set with missing values filled**
+**Before filling missing values the mean and the median were almost equal (median=10765, mean=70766)  After filling the missing values the Mean and median has changed, the mean is now greater than median by small difference.**
 
 
 
